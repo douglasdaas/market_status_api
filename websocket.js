@@ -68,28 +68,28 @@ webSocketClient.on('message', (response) => {
         // Tickers
         case BTCTicketChannelId:
           updateTicker({
-            ticker_array: tickerBookDataArray,
+            tickerArray: tickerBookDataArray,
             currency: BTC_TICKER
           })
           break
         case ETHTicketChannelId:
           updateTicker({
-            ticker_array: tickerBookDataArray,
+            tickerArray: tickerBookDataArray,
             currency: ETH_TICKER
           })
           break
           // Books
         case BTCBookChannelId:
           updateOrderBook({
-            price_point_array: tickerBookDataArray,
-            order_book: BTC_BOOK,
+            pricePointArray: tickerBookDataArray,
+            orderBook: BTC_BOOK,
             currency: 'BTC'
           })
           break
         case ETHBookChannelId:
           updateOrderBook({
-            price_point_array: tickerBookDataArray,
-            order_book: ETH_BOOK,
+            pricePointArray: tickerBookDataArray,
+            orderBook: ETH_BOOK,
             currency: 'ETH'
           })
           break
