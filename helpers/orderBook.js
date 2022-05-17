@@ -86,7 +86,7 @@ const searchOrder = ({ orderBook, bookSide, amount, limit }) => {
           // If it's the first price point return not price or amount
           if (pricePoint === orderBook.price_snapchat.asks[0]) {
             return {
-              message: `The buy limit: ${limit} is less than the cheapest sell price ${orderBook.price_snapchat.asks[0]}`
+              message: `The buy limit: ${limit.toLocaleString()} is less than the cheapest sell price ${parseFloat(orderBook.price_snapchat.asks[0]).toLocaleString()}`
             }
           }
           return {
