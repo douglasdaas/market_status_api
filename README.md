@@ -9,3 +9,5 @@ To run the code utilize `npm start`
 Server will run on `localhost:3000/` by default
 
 To test the routes use this postman collection: https://www.getpostman.com/collections/bf086d2308d3c9073d0c
+
+To run automated test run `npm test`
