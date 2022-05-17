@@ -1,29 +1,29 @@
 const {
-    FIAT_ALLOWED,
-    CRYPTO_ALLOWED
-} = require("../configs");
+  FIAT_ALLOWED,
+  CRYPTO_ALLOWED
+} = require('../configs')
 
 const validatePairsMiddleware = (req, res, next) => {
-    const { crypto_pair, fiat_pair} = req.params
+  const { cryptoPair, fiatPair } = req.params
 
-    if (!FIAT_ALLOWED.includes(fiat_pair.toLowerCase())) {
-        return res.status(400).json({
-            ok: false,
-            param: "fiat_pair",
-            message: "The only fiat pair accepted is 'USD'",
-        })
-    }
+  if (!FIAT_ALLOWED.includes(fiatPair.toLowerCase())) {
+    return res.status(400).json({
+      ok: false,
+      param: 'fiatPair',
+      message: `Fiat pair(s) accepted: ${FIAT_ALLOWED.join(', ').toUpperCase()}`
+    })
+  }
 
-    if (!CRYPTO_ALLOWED.includes(crypto_pair.toLowerCase())) {
-        return res.status(400).json({
-            ok: false,
-            param: "crypto_pair",
-            message: "Crypto pairs accepted are 'BTC' and 'ETH",
-        })
-    }
-    next()
+  if (!CRYPTO_ALLOWED.includes(cryptoPair.toLowerCase())) {
+    return res.status(400).json({
+      ok: false,
+      param: 'cryptoPair',
+      message: `Crypto pair(s) accepted: ${CRYPTO_ALLOWED.join(', ').toUpperCase()}`
+    })
+  }
+  next()
 }
 
 module.exports = {
-    validatePairsMiddleware,
+  validatePairsMiddleware
 }

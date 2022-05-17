@@ -1,41 +1,56 @@
-const express = require('express');
-const router = express.Router();
+const express = require('express')
+const router = express.Router()
 
 const {
-    BTC_TICKER,
-    ETH_TICKER,
-} = require("../websocket");
+  BTC_TICKER,
+  ETH_TICKER,
+  BTC_BOOK,
+  ETH_BOOK
+} = require('../websocket')
 const {
-    validatePairsMiddleware,
-} = require("../helpers/midelware");
+  validatePairsMiddleware
+} = require('../helpers/midelware')
+const {
+  getTips
+} = require('../helpers/orderBook')
 
-
-
-router.get("/:crypto_pair-:fiat_pair", validatePairsMiddleware,(
-    req,
-    res,
+router.get('/ticker/:cryptoPair-:fiatPair', validatePairsMiddleware, (
+  req,
+  res
 ) => {
-    const { crypto_pair } = req.params
+  const { cryptoPair } = req.params
+  const ticker = cryptoPair.toLowerCase() === 'btc' ? BTC_TICKER : ETH_TICKER
 
-    if (crypto_pair.toLowerCase() === "btc") {
-        return res.json({
-            ok: true,
-            currency: "BTC",
-            bid_price: BTC_TICKER.bid_price,
-            bid_amount: BTC_TICKER.bid_amount,
-            ask_price: BTC_TICKER.ask_price,
-            ask_amount: BTC_TICKER.ask_amount,
-        })
-    } else {
-        return res.json({
-            ok: true,
-            currency: "ETH",
-            bid_price: ETH_TICKER.bid_price,
-            bid_amount: ETH_TICKER.bid_amount,
-            ask_price: ETH_TICKER.ask_price,
-            ask_amount: ETH_TICKER.ask_amount,
-        })
+  return res.json({
+    ok: true,
+    currency: cryptoPair.toUpperCase(),
+    bid_price: ticker.bid_price,
+    bid_25_first_sum_amount: ticker.bid_amount,
+    ask_price: ticker.ask_price,
+    ask_25_first_sum_amount: ticker.ask_amount
+  })
+})
+
+router.get('/orderBook/:cryptoPair-:fiatPair', validatePairsMiddleware, (
+  req,
+  res
+) => {
+  const { cryptoPair } = req.params
+  const orderBook = cryptoPair.toLowerCase() === 'btc' ? BTC_BOOK : ETH_BOOK
+  const { bid, ask } = getTips(orderBook)
+
+  return res.json({
+    ok: true,
+    currency: cryptoPair.toUpperCase(),
+    bid: {
+      price: bid.price,
+      amount: bid.amount
+    },
+    ask: {
+      price: ask.price,
+      amount: ask.amount
     }
-});
+  })
+})
 
-module.exports = router;
+module.exports = router

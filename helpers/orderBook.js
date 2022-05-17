@@ -1,93 +1,104 @@
-const updateOrderBook =  ({price_point_array, order_book}) => {
-    if (order_book.empty_book) {
-        price_point_array.map((price_point) => {
-            const price_point_dict = {
-                price: price_point[0],
-                count: price_point[1],
-                amount: price_point[2]
-            }
-            const side = price_point_dict.amount >= 0 ? 'bids' : 'asks'
-            price_point_dict.amount = Math.abs(price_point_dict.amount)
-            order_book[side][price_point_dict.price] = price_point_dict
+const updateOrderBook = ({ pricePointArray, orderBook, currency }) => {
+  if (orderBook.empty_book) {
+    pricePointArray.map((pricePoint) => {
+      const pricePointDict = {
+        price: pricePoint[0],
+        count: pricePoint[1],
+        amount: pricePoint[2]
+      }
+      const side = pricePointDict.amount >= 0 ? 'bids' : 'asks'
+      pricePointDict.amount = Math.abs(pricePointDict.amount)
+      orderBook[side][pricePointDict.price] = pricePointDict
 
-            // console.log(`Added price point: ${price_point_dict.price} to the ${side} book`)
-        })
-    } else {
-        const price_point_dict = {
-            price: price_point_array[0],
-            count: price_point_array[1],
-            amount: price_point_array[2],
-        }
-
-        if (!price_point_dict.count) {
-            if (price_point_dict.amount > 0) {
-                if (order_book['bids'][price_point_dict.price]) {
-                    delete order_book['bids'][price_point_dict.price]
-                    // console.log(`price point: ${price_point_dict.price} deleted on bids book`)
-                }
-            } else if (price_point_dict.amount < 0) {
-                if (order_book['asks'][price_point_dict.price]) {
-                    delete order_book['asks'][price_point_dict.price]
-                    // console.log(`price point: ${price_point_dict.price} deleted on asks book`)
-                }
-            } else {
-                // console.log(`price point: ${price_point_dict.price}  with count 0 not deleted because not found`)
-            }
-        } else {
-            const side = price_point_dict.amount >= 0 ? 'bids' : 'asks'
-            price_point_dict.amount = Math.abs(price_point_dict.amount)
-            order_book[side][price_point_dict.price] = price_point_dict
-
-            // console.log(`Added price point: ${price_point_dict.price} to the ${side} book`)
-        }
+      return true
+      // console.log(`Added price point: ${pricePointDict.price} to the ${side} ${currency} book`)
+    })
+  } else {
+    const pricePointDict = {
+      price: pricePointArray[0],
+      count: pricePointArray[1],
+      amount: pricePointArray[2]
     }
 
-    const book_sides = [ "bids", "asks" ]
-    book_sides.map((book_side) =>{
-        const prices = Object.keys(order_book[book_side])
-        order_book.price_snapchat[book_side] = prices.sort((a, b) =>{
-            if (book_side === 'bids') {
-                return +a >= +b ? -1 : 1
-            } else {
-                return +a <= +b ? -1 : 1
-            }
-        })
-    })
+    if (!pricePointDict.count) {
+      if (pricePointDict.amount > 0) {
+        if (orderBook.bids[pricePointDict.price]) {
+          delete orderBook.bids[pricePointDict.price]
+          // console.log(`price point: ${pricePointDict.price} deleted on ${currency} bids book`)
+        }
+      } else if (pricePointDict.amount < 0) {
+        if (orderBook.asks[pricePointDict.price]) {
+          delete orderBook.asks[pricePointDict.price]
+          // console.log(`price point: ${pricePointDict.price} deleted on ${currency} asks book`)
+        }
+      } else {
+        // console.log(`price point: ${pricePointDict.price}  with count 0 not deleted because not found on ${currency} book`)
+      }
+    } else {
+      const side = pricePointDict.amount >= 0 ? 'bids' : 'asks'
+      pricePointDict.amount = Math.abs(pricePointDict.amount)
+      orderBook[side][pricePointDict.price] = pricePointDict
 
-    order_book.empty_book = false
+      // console.log(`Added price point: ${pricePointDict.price} to the ${currency} ${side} book`)
+    }
+  }
+
+  const bookSides = ['bids', 'asks']
+  bookSides.map((bookSide) => {
+    const prices = Object.keys(orderBook[bookSide])
+    orderBook.price_snapchat[bookSide] = prices.sort((a, b) => {
+      if (bookSide === 'bids') {
+        return +a >= +b ? -1 : 1
+      } else {
+        return +a <= +b ? -1 : 1
+      }
+    })
+    return true
+  })
+
+  orderBook.empty_book = false
 }
 
-const searchOrder = ({order_book, book_side, amount}) => {
-    if (!["bids", "asks"].includes(book_side)){
-        return new Error(`book_side error, value: ${book_side}. book_side only can be "bids" or "asks"`)
-    }
-    let i = 0
-    let market_price = order_book.price_snapchat[book_side][i]
+const searchOrder = ({ orderBook, bookSide, amount }) => {
+  if (!['bids', 'asks'].includes(bookSide)) {
+    throw new Error(`bookSide error, value: "${bookSide}". bookSide only can be "bids" or "asks"`)
+  }
+  let accumulatedAmount = 0
+  let accumulatedPrice = 0
+  let amountMissing = amount - accumulatedAmount
 
-    if (book_side === "asks") {
-        while (order_book.asks[market_price].amount > amount) {
-            if (i === order_book.price_snapchat.asks.length - 1) {
-                return false
-            }
-            i += 1
-            market_price = order_book.price_snapchat.asks[i]
-        }
-        console.log(order_book.asks[market_price].price)
-        return order_book.asks[market_price].price
+  if (!orderBook.price_snapchat[bookSide].length) {
+    return {
+      message: 'Data not available yet, try again'
+    }
+  }
+  for (const pricePoint of orderBook.price_snapchat[bookSide]) {
+    if (orderBook[bookSide][pricePoint].amount <= amountMissing) {
+      accumulatedAmount += orderBook[bookSide][pricePoint].amount
+      accumulatedPrice += orderBook[bookSide][pricePoint].amount * orderBook[bookSide][pricePoint].price
+      amountMissing = amount - accumulatedAmount
     } else {
-        while (order_book.bids[market_price].amount < amount) {
-            if (i === order_book.price_snapchat.bids.length - 1) {
-                return false
-            }
-            i += 1
-            market_price = order_book.price_snapchat.bids[i]
-        }
-        return order_book.bids[market_price].price
+      accumulatedPrice += (amount - accumulatedAmount) * orderBook[bookSide][pricePoint].price
+      accumulatedAmount = amount
     }
+    if (accumulatedAmount === amount) {
+      return parseFloat(accumulatedPrice.toFixed(2))
+    }
+  }
+  return false
+}
 
+const getTips = (orderBook) => {
+  const bid = orderBook.price_snapchat.bids[0]
+  const ask = orderBook.price_snapchat.asks[0]
+  return {
+    bid: orderBook.bids[bid],
+    ask: orderBook.asks[ask]
+  }
 }
 
 module.exports = {
-    updateOrderBook,
-    searchOrder,
+  updateOrderBook,
+  searchOrder,
+  getTips
 }
