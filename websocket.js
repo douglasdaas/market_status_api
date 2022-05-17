@@ -1,9 +1,7 @@
 const Websocket = require('ws')
 const {
-  BTC_TICKER,
-  ETH_TICKER,
-  BTC_BOOK,
-  ETH_BOOK
+  TICKER,
+  BOOK
 } = require('./models')
 const {
   CONFIG_BTC_USD_TICKER,
@@ -27,6 +25,18 @@ webSocketClient.on('open', () => {
   webSocketClient.send(CONFIG_BTC_USD_BOOK)
   webSocketClient.send(CONFIG_ETH_USD_BOOK)
 })
+
+// Tickers
+const BTC_TICKER = TICKER
+BTC_TICKER.currency = 'BTC'
+const ETH_TICKER = TICKER
+ETH_TICKER.currency = 'ETH'
+
+// Books
+const BTC_BOOK = BOOK
+BTC_BOOK.currency = 'BTC'
+const ETH_BOOK = BOOK
+ETH_BOOK.currency = 'ETH'
 
 let BTCTicketChannelId
 let BTCBookChannelId
@@ -69,28 +79,26 @@ webSocketClient.on('message', (response) => {
         case BTCTicketChannelId:
           updateTicker({
             tickerArray: tickerBookDataArray,
-            currency: BTC_TICKER
+            tickerCurrency: BTC_TICKER
           })
           break
         case ETHTicketChannelId:
           updateTicker({
             tickerArray: tickerBookDataArray,
-            currency: ETH_TICKER
+            tickerCurrency: ETH_TICKER
           })
           break
           // Books
         case BTCBookChannelId:
           updateOrderBook({
             pricePointArray: tickerBookDataArray,
-            orderBook: BTC_BOOK,
-            currency: 'BTC'
+            orderBook: BTC_BOOK
           })
           break
         case ETHBookChannelId:
           updateOrderBook({
             pricePointArray: tickerBookDataArray,
-            orderBook: ETH_BOOK,
-            currency: 'ETH'
+            orderBook: ETH_BOOK
           })
           break
       }

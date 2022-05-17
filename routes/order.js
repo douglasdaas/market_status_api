@@ -16,7 +16,7 @@ router.post('/:cryptoPair-:fiatPair', validatePairsMiddleware, (
   res
 ) => {
   const { cryptoPair } = req.params
-  const { operationType, amount } = req.body
+  const { operationType, amount, limit } = req.body
 
   if (!operationType) {
     return res.status(400).json({
@@ -50,6 +50,13 @@ router.post('/:cryptoPair-:fiatPair', validatePairsMiddleware, (
     })
   }
 
+  if (limit <= 0) {
+    return res.status(400).json({
+      ok: false,
+      field: 'limit',
+      message: 'limit need to be greater than zero'
+    })
+  }
   let price
   const bookSide = operationType === 'buy' ? 'asks' : 'bids'
   const orderBook = cryptoPair.toLowerCase() === 'btc' ? BTC_BOOK : ETH_BOOK
@@ -57,20 +64,14 @@ router.post('/:cryptoPair-:fiatPair', validatePairsMiddleware, (
     price = searchOrder({
       orderBook,
       bookSide,
-      amount
+      amount,
+      limit
     })
   } catch (error) {
     console.error(error)
     return res.status(500).json({
       ok: false,
       message: error.message
-    })
-  }
-  if (price === false) {
-    return res.json({
-      ok: true,
-      currency: cryptoPair.toUpperCase(),
-      message: `Amount: ${amount} not available for ${operationType} `
     })
   }
   if (price.message) {
@@ -80,10 +81,19 @@ router.post('/:cryptoPair-:fiatPair', validatePairsMiddleware, (
       message: price.message
     })
   }
+  if (price.limit) {
+    return res.json({
+      ok: true,
+      currency: cryptoPair.toUpperCase(),
+      limit: true,
+      max_amount: price.max_amount,
+      message: `The ${operationType} limit order for price: $${limit.toLocaleString()} will be execute for: $${price.price.toLocaleString()} for a max amount of: ${price.max_amount.toLocaleString()}`
+    })
+  }
   return res.json({
     ok: true,
     currency: cryptoPair.toUpperCase(),
-    message: `The ${operationType} order for amount: ${amount} will be execute at price: ${price}`
+    message: `The ${operationType} order for amount: ${amount} will be execute for: $${price.toLocaleString()}`
   })
 })
 

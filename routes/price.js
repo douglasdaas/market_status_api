@@ -37,20 +37,28 @@ router.get('/orderBook/:cryptoPair-:fiatPair', validatePairsMiddleware, (
 ) => {
   const { cryptoPair } = req.params
   const orderBook = cryptoPair.toLowerCase() === 'btc' ? BTC_BOOK : ETH_BOOK
-  const { bid, ask } = getTips(orderBook)
-
-  return res.json({
-    ok: true,
-    currency: cryptoPair.toUpperCase(),
-    bid: {
-      price: bid.price,
-      amount: bid.amount
-    },
-    ask: {
-      price: ask.price,
-      amount: ask.amount
-    }
-  })
+  const { bid, ask, message } = getTips(orderBook)
+  if (message) {
+    return res.json({
+      ok: true,
+      currency: cryptoPair.toUpperCase(),
+      message
+    })
+  }
+  if (bid) {
+    return res.json({
+      ok: true,
+      currency: cryptoPair.toUpperCase(),
+      bid: {
+        price: bid.price,
+        amount: bid.amount
+      },
+      ask: {
+        price: ask.price,
+        amount: ask.amount
+      }
+    })
+  }
 })
 
 module.exports = router
